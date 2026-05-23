@@ -15,7 +15,7 @@ public class CustomerOrder {
     private String customerName;
     private BigDecimal totalPrice;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
 
     public Long getId() {

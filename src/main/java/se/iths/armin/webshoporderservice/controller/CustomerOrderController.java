@@ -8,6 +8,8 @@ import se.iths.armin.webshoporderservice.dto.CreateOrderRequest;
 import se.iths.armin.webshoporderservice.entity.CustomerOrder;
 import se.iths.armin.webshoporderservice.service.CustomerOrderService;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/orders")
 public class CustomerOrderController {
@@ -19,8 +21,9 @@ public class CustomerOrderController {
     }
 
     @PostMapping
-    public CustomerOrder createOrder(@RequestBody CreateOrderRequest request) {
-        return customerOrderService.createOrder(request);
-
+    public CustomerOrder createOrder(@RequestBody CreateOrderRequest request,
+                                     Principal principal) {
+        String username = principal.getName();
+        return customerOrderService.createOrder(request, username);
     }
 }   
