@@ -1,13 +1,16 @@
 package se.iths.armin.webshoporderservice.service;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import se.iths.armin.webshoporderservice.client.ProductClient;
+import se.iths.armin.webshoporderservice.config.RabbitMQConfig;
 import se.iths.armin.webshoporderservice.dto.CreateOrderItemRequest;
 import se.iths.armin.webshoporderservice.dto.CreateOrderRequest;
 import se.iths.armin.webshoporderservice.dto.ProductInfo;
 import se.iths.armin.webshoporderservice.dto.ProductStockRequest;
 import se.iths.armin.webshoporderservice.entity.CustomerOrder;
 import se.iths.armin.webshoporderservice.entity.OrderItem;
+import se.iths.armin.webshoporderservice.message.OrderConfirmationMessage;
 import se.iths.armin.webshoporderservice.repository.CustomerOrderRepository;
 
 import java.math.BigDecimal;
@@ -21,20 +24,23 @@ public class CustomerOrderService {
 
     private final CustomerOrderRepository customerOrderRepository;
     private final ProductClient productClient;
+    private final RabbitTemplate rabbitTemplate;
 
     public CustomerOrderService(
             CustomerOrderRepository customerOrderRepository,
-            ProductClient productClient) {
+            ProductClient productClient,
+            RabbitTemplate rabbitTemplate) {
 
         this.customerOrderRepository = customerOrderRepository;
         this.productClient = productClient;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public List<CustomerOrder> findAll() {
         return customerOrderRepository.findAll();
     }
 
-    public CustomerOrder createOrder(CreateOrderRequest request) {
+    public CustomerOrder createOrder(CreateOrderRequest request, String username) {
         List<ProductStockRequest> stockRequests = new ArrayList<>();
 
         for (CreateOrderItemRequest item : request.getItems()) {
@@ -66,11 +72,34 @@ public class CustomerOrderService {
 
         CustomerOrder order = new CustomerOrder();
         order.setOrderDate(LocalDateTime.now());
-        order.setCustomerName("test@example.com");
+        order.setCustomerName(username);
         order.setOrderItems(orderItems);
         order.setTotalPrice(totalPrice);
 
-        return customerOrderRepository.save(order);
+        CustomerOrder savedOrder =
+                customerOrderRepository.save(order);
+
+        OrderConfirmationMessage message =
+                new OrderConfirmationMessage();
+
+        message.setCustomerEmail(username);
+        message.setOrderDate(savedOrder.getOrderDate().toString());
+
+        List<String> items = new ArrayList<>();
+
+        for (OrderItem item : savedOrder.getOrderItems()) {
+            items.add(item.getName() + " x " + item.getQuantity());
+        }
+
+        message.setItems(items);
+        message.setTotalPrice(
+                savedOrder.getTotalPrice().doubleValue());
+
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.ORDER_CONFIRMATION_QUEUE,
+                message);
+
+        return savedOrder;
     }
 
 }
