@@ -85,10 +85,14 @@ public class CustomerOrderService {
         message.setCustomerEmail(username);
         message.setOrderDate(savedOrder.getOrderDate().toString());
 
-        List<String> items = new ArrayList<>();
+        List<OrderConfirmationMessage.OrderItemSummary> items = new ArrayList<>();
 
         for (OrderItem item : savedOrder.getOrderItems()) {
-            items.add(item.getName() + " x " + item.getQuantity());
+            items.add(new OrderConfirmationMessage.OrderItemSummary(
+                    item.getName(),
+                    item.getQuantity(),
+                    item.getPrice().doubleValue()
+            ));
         }
 
         message.setItems(items);

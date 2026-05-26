@@ -6,8 +6,32 @@ public class OrderConfirmationMessage {
 
     private String customerEmail;
     private String orderDate;
-    private List<String> items;
+    private List<OrderItemSummary> items;
     private double totalPrice;
+
+    public static class OrderItemSummary {
+        private String name;
+        private int quantity;
+        private double price;
+
+        public OrderItemSummary(String name, int quantity, double price) {
+            this.name = name;
+            this.quantity = quantity;
+            this.price = price;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+    }
 
     public String getCustomerEmail() {
         return customerEmail;
@@ -25,11 +49,11 @@ public class OrderConfirmationMessage {
         this.orderDate = orderDate;
     }
 
-    public List<String> getItems() {
+    public List<OrderItemSummary> getItems() {
         return items;
     }
 
-    public void setItems(List<String> items) {
+    public void setItems(List<OrderItemSummary> items) {
         this.items = items;
     }
 
