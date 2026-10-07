@@ -1,5 +1,8 @@
 package se.iths.armin.webshoporderservice.controller;
 
+import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,5 +28,19 @@ public class CustomerOrderController {
                                      Principal principal) {
         String username = principal.getName();
         return customerOrderService.createOrder(request, username);
+    }
+
+    @PostMapping("/checkout")
+    public ResponseEntity<String> createCheckout(
+            @RequestBody CreateOrderRequest request,
+            Principal principal) throws StripeException {
+
+        CustomerOrder order =
+                customerOrderService.createOrder(request, principal.getName());
+
+        Session session =
+                customerOrderService.createCheckoutSession(order);
+
+        return ResponseEntity.ok(session.getUrl());
     }
 }   
