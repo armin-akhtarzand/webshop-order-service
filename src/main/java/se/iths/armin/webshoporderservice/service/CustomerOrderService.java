@@ -127,7 +127,7 @@ public class CustomerOrderService {
         SessionCreateParams params =
                 SessionCreateParams.builder()
                         .setMode(SessionCreateParams.Mode.PAYMENT)
-                        .setSuccessUrl("http://localhost:3000/payment/success")
+                        .setSuccessUrl("http://localhost:3000/payment/success?orderId=" + order.getId())
                         .setCancelUrl("http://localhost:3000/payment/cancel")
                         .addLineItem(
                                 SessionCreateParams.LineItem.builder()
