@@ -1,6 +1,11 @@
 package se.iths.armin.webshoporderservice.service;
 
+import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
+import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import se.iths.armin.webshoporderservice.client.ProductClient;
 import se.iths.armin.webshoporderservice.config.RabbitMQConfig;
@@ -17,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -25,6 +31,9 @@ public class CustomerOrderService {
     private final CustomerOrderRepository customerOrderRepository;
     private final ProductClient productClient;
     private final RabbitTemplate rabbitTemplate;
+
+    @Value("${stripe.secret-key}")
+    private String stripeSecretKey;
 
     public CustomerOrderService(
             CustomerOrderRepository customerOrderRepository,
@@ -105,5 +114,50 @@ public class CustomerOrderService {
 
         return savedOrder;
     }
+
+    public Optional<CustomerOrder> getOrderById(Long id) {
+        return customerOrderRepository.findById(id);
+    }
+
+
+    public Session createCheckoutSession(CustomerOrder order) throws StripeException {
+
+        Stripe.apiKey = stripeSecretKey;
+
+        SessionCreateParams params =
+                SessionCreateParams.builder()
+                        .setMode(SessionCreateParams.Mode.PAYMENT)
+                        .setSuccessUrl("http://localhost:5173/payment/success?orderId=" + order.getId())
+                        .setCancelUrl("http://localhost:5173/payment/cancel")
+                        .addLineItem(
+                                SessionCreateParams.LineItem.builder()
+                                        .setQuantity(1L)
+                                        .setPriceData(
+                                                SessionCreateParams.LineItem.PriceData.builder()
+                                                        .setCurrency("sek")
+                                                        .setUnitAmount(
+                                                                order.getTotalPrice()
+                                                                        .multiply(new BigDecimal("100"))
+                                                                        .longValue()
+                                                        )
+                                                        .setProductData(
+                                                                SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                        .setName("Webshop order #" + order.getId())
+                                                                        .build()
+                                                        )
+                                                        .build()
+                                        )
+                                        .build()
+                        )
+                        .build();
+
+        Session session = Session.create(params);
+
+        order.setStripeSessionId(session.getId());
+        customerOrderRepository.save(order);
+
+        return session;
+    }
+
 
 }
