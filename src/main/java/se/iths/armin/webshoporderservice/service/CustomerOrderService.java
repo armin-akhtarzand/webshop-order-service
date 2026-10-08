@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -112,6 +113,10 @@ public class CustomerOrderService {
                 message);
 
         return savedOrder;
+    }
+
+    public Optional<CustomerOrder> getOrderById(Long id) {
+        return customerOrderRepository.findById(id);
     }
 
 
