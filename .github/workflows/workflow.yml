@@ -17,6 +17,9 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
         run: mvn clean verify
 
 
