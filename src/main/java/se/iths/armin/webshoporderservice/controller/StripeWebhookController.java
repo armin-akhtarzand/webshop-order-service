@@ -94,8 +94,7 @@ public class StripeWebhookController {
             //  Skicka orderbekräftelsen först efter att ordern markerats som betald.
             customerOrderService.sendOrderConfirmation(order);
 
-        } else if ("checkout.session.async_payment_failed".equals(eventType)
-                || "checkout.session.expired".equals(eventType)) {
+        } else {
 
             order.setPaymentStatus(PaymentStatus.FAILED);
             customerOrderRepository.save(order);
