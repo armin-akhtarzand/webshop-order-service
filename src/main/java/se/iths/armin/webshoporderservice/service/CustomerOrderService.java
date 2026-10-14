@@ -88,13 +88,18 @@ public class CustomerOrderService {
         CustomerOrder savedOrder =
                 customerOrderRepository.save(order);
 
-        OrderConfirmationMessage message =
-                new OrderConfirmationMessage();
+        return savedOrder;
+    }
 
-        message.setCustomerEmail(username);
+
+    public void sendOrderConfirmation(CustomerOrder savedOrder) {
+        OrderConfirmationMessage message = new OrderConfirmationMessage();
+
+        message.setCustomerEmail(savedOrder.getCustomerName());
         message.setOrderDate(savedOrder.getOrderDate().toString());
 
-        List<OrderConfirmationMessage.OrderItemSummary> items = new ArrayList<>();
+        List<OrderConfirmationMessage.OrderItemSummary> items =
+                new ArrayList<>();
 
         for (OrderItem item : savedOrder.getOrderItems()) {
             items.add(new OrderConfirmationMessage.OrderItemSummary(
@@ -105,15 +110,14 @@ public class CustomerOrderService {
         }
 
         message.setItems(items);
-        message.setTotalPrice(
-                savedOrder.getTotalPrice().doubleValue());
+        message.setTotalPrice(savedOrder.getTotalPrice().doubleValue());
 
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.ORDER_CONFIRMATION_QUEUE,
-                message);
-
-        return savedOrder;
+                message
+        );
     }
+
 
     public Optional<CustomerOrder> getOrderById(Long id) {
         return customerOrderRepository.findById(id);
