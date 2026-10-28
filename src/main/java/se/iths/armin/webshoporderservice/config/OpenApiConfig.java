@@ -8,10 +8,19 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Ställer in API-dokumentationen som visas i Swagger.
+ */
 @Configuration
 public class OpenApiConfig {
 
 
+    /**
+     * Anger API-information och hur en Bearer-token skickas vid testning i Swagger.
+     * Denna inställning beskriver API:t men skyddar inte anropen i sig.
+     *
+     * @return API-dokumentationens inställningar
+     */
     @Bean
     public OpenAPI openAPI() {
         String schemeName = "bearerAuth";

@@ -6,6 +6,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * En sparad beställning med kundens mejladress, orderrader, totalpris och betalningsstatus.
+ * En ny beställning börjar med status PENDING och kan kopplas till en Stripe-session.
+ */
 @Entity
 public class CustomerOrder {
     @Id
