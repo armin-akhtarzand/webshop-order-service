@@ -14,10 +14,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Ställer in JWT-verifiering och vilka anrop som kräver inloggning i order-service.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /**
+     * Kräver en giltig JWT för orderanrop och sparar ingen inloggningssession på servern.
+     * Swagger och Stripe-webhooken tillåts utan JWT.
+     * Webhookens signatur kontrolleras istället i StripeWebhookController.
+     * CSRF-skyddet är avstängt; tjänsten tar emot JWT via Authorization-headern.
+     *
+     * @param http inställningar för HTTP-säkerhet
+     * @return säkerhetsreglerna för inkommande anrop
+     * @throws Exception om säkerhetsreglerna inte kan skapas
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -41,6 +54,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Bestämmer vilka lokala frontend-adresser som får göra anrop från webbläsaren,
+     * samt vilka HTTP-metoder och headers som tillåts.
+     *
+     * @return CORS-inställningarna för tjänstens endpoints
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

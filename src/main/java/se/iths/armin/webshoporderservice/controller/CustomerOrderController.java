@@ -12,6 +12,9 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Tar emot anrop för att skapa och hämta beställningar samt starta Stripe Checkout.
+ */
 @RestController
 @RequestMapping("/orders")
 public class CustomerOrderController {
@@ -22,6 +25,13 @@ public class CustomerOrderController {
         this.customerOrderService = customerOrderService;
     }
 
+    /**
+     * Skapar beställning via CustomerOrderService
+     *
+     * @param request   produkter och antal som beställningen innehåller
+     * @param principal autentiserade användaren gjort beställningen
+     * @return den sparade beställningen
+     */
     @PostMapping
     public CustomerOrder createOrder(@RequestBody CreateOrderRequest request,
                                      Principal principal) {
@@ -29,6 +39,13 @@ public class CustomerOrderController {
         return customerOrderService.createOrder(request, username);
     }
 
+    /**
+     * Hämta beställningen via ID
+     *
+     * @param id beställningens ID
+     * @return Ifall beställningen finns status 200 OK med ordern
+     * annars status 404 utan body
+     */
     @GetMapping("/{id}")
     public ResponseEntity<CustomerOrder> getOrder(@PathVariable Long id) {
         return customerOrderService.getOrderById(id)
@@ -36,6 +53,16 @@ public class CustomerOrderController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Skapar beställningen via CustomerOrderService
+     * skapar en stripe session inför betalningen av beställningen via CustomerOrderService
+     * sparar sessionens url och beställningen i en hashmap som response
+     *
+     * @param request   produkter och antal som beställningen gäller
+     * @param principal vilken användare som gör beställningen
+     * @return status 200 med betalningssidans url och beställningens id
+     * @throws StripeException om anropet till stripe misslyckas
+     */
     @PostMapping("/checkout")
     public ResponseEntity<Map<String, Object>> createCheckout(
             @RequestBody CreateOrderRequest request,

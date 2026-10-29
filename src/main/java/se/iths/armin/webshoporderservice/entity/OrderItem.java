@@ -7,6 +7,10 @@ import jakarta.persistence.Id;
 
 import java.math.BigDecimal;
 
+/**
+ * En rad i en beställning med produktens namn, styckpris och beställt antal.
+ * Uppgifterna sparas på orderraden när beställningen skapas.
+ */
 @Entity
 public class OrderItem {
 

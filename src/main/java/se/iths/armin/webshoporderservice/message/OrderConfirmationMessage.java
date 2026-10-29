@@ -2,6 +2,10 @@ package se.iths.armin.webshoporderservice.message;
 
 import java.util.List;
 
+/**
+ * Innehåller beställningsuppgifterna som skickas via RabbitMQ till mail-service.
+ * Mail-service använder uppgifterna för att skapa och skicka orderbekräftelsen.
+ */
 public class OrderConfirmationMessage {
 
     private String customerEmail;
@@ -9,6 +13,9 @@ public class OrderConfirmationMessage {
     private List<OrderItemSummary> items;
     private double totalPrice;
 
+    /**
+     * Produktnamn, beställt antal och styckpris för en rad i orderbekräftelsen.
+     */
     public static class OrderItemSummary {
         private String name;
         private int quantity;

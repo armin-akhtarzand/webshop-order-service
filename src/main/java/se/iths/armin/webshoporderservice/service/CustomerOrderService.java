@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Optional;
 
 
+/**
+ * Hanterar orderskapning, lageranrop, Stripe Checkout och publicering av orderbekräftelser.
+ */
 @Service
 public class CustomerOrderService {
 
@@ -45,10 +48,25 @@ public class CustomerOrderService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
+    /**
+     * Hämtar alla beställningar.
+     *
+     * @return en lista med alla beställningar, eller en tom lista om inga finns
+     */
     public List<CustomerOrder> findAll() {
         return customerOrderRepository.findAll();
     }
 
+    /**
+     * Skapar beställningen med angivna produkter och antal
+     * Minskar lagersaldot via product-service
+     * räknar ut totalpriset med hjälp av priserna från product-service
+     * sparar beställningen med betalningsstatus pending (default)
+     *
+     * @param request  produkterna och antal som beställningen innehåller
+     * @param username mejlen på användaren som gör beställningen
+     * @return den sparade beställningen
+     */
     public CustomerOrder createOrder(CreateOrderRequest request, String username) {
         List<ProductStockRequest> stockRequests = new ArrayList<>();
 
@@ -91,7 +109,13 @@ public class CustomerOrderService {
         return savedOrder;
     }
 
-
+    /**
+     * Bygger en orderbekräftelse med beställarens mejl,
+     * beställningsdatum, produkter, antal och totalpris
+     * Publicerar meddelandet till RabbitMQ för mejlutskick via mail-service
+     *
+     * @param savedOrder den sparade beställningen som bekräftelsen gäller
+     */
     public void sendOrderConfirmation(CustomerOrder savedOrder) {
         OrderConfirmationMessage message = new OrderConfirmationMessage();
 
@@ -119,11 +143,26 @@ public class CustomerOrderService {
     }
 
 
+    /**
+     * Hämtar en beställning via ID.
+     *
+     * @param id ID för beställningen som ska hämtas
+     * @return en Optional med beställningen om den finns, annars en tom Optional
+     */
     public Optional<CustomerOrder> getOrderById(Long id) {
         return customerOrderRepository.findById(id);
     }
 
 
+    /**
+     * Skapar en Stripe Checkout-session för beställningen.
+     * Anger valuta, belopp i ören och adresser för slutförd eller avbruten checkout.
+     * Sparar Stripe-sessionens ID på beställningen.
+     *
+     * @param order beställningen som ska betalas
+     * @return den skapade Stripe-sessionen med bland annat betalningssidans URL
+     * @throws StripeException om anropet till Stripe misslyckas
+     */
     public Session createCheckoutSession(CustomerOrder order) throws StripeException {
 
         Stripe.apiKey = stripeSecretKey;
